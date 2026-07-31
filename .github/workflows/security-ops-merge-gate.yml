@@ -1,0 +1,47 @@
+name: Security Ops merge gate
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+      - unlabeled
+      - ready_for_review
+      - converted_to_draft
+  merge_group:
+    types:
+      - checks_requested
+
+permissions:
+  contents: read
+
+jobs:
+  merge-gate:
+    name: security-ops/merge-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Validate immutable merge inputs
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          IS_DRAFT: ${{ github.event.pull_request.draft || false }}
+          IS_FORK: ${{ github.event.pull_request.head.repo.fork || false }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name || '' }}
+          BASE_REPOSITORY: ${{ github.event.pull_request.base.repo.full_name || '' }}
+          LABELS_JSON: ${{ toJson(github.event.pull_request.labels.*.name) }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "merge_group" ]]; then
+            exit 0
+          fi
+          [[ "$EVENT_NAME" == "pull_request" ]]
+          [[ "$IS_DRAFT" == "false" ]]
+          [[ "$IS_FORK" == "false" ]]
+          [[ "$HEAD_REPOSITORY" == "$BASE_REPOSITORY" ]]
+          if grep -Fq '"security:awaiting-human"' <<<"$LABELS_JSON"; then
+            echo "human gate is still active"
+            exit 1
+          fi

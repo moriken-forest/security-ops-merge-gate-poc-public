@@ -1,0 +1,2 @@
+/.github/CODEOWNERS @moriken-forest
+/.github/workflows/security-ops-merge-gate.yml @moriken-forest
