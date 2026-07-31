@@ -1,0 +1,1 @@
+This branch intentionally omits the latest protected base commit.
