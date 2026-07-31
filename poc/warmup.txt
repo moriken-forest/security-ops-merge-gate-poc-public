@@ -1,0 +1,1 @@
+Warm up the GitHub Actions check so its App identity can be observed.
